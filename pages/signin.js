@@ -16,6 +16,7 @@ export default function SignIn() {
     const [loading, setLoading] = useState(1);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [submitLoading, setSubmitLoading] = useState(0);
 
     /**
      * Render error
@@ -52,14 +53,14 @@ export default function SignIn() {
                     message = errorData?.detail;
                 }
             }
+        
+            Swal.fire({
+                title: 'Kesalahan!',
+                text: message,
+                icon: 'error',
+                confirmButtonText: 'Coba Lagi'
+            });
         }
-
-        Swal.fire({
-            title: 'Kesalahan!',
-            text: message,
-            icon: 'error',
-            confirmButtonText: 'Coba Lagi'
-        });
     }
 
 
@@ -75,12 +76,14 @@ export default function SignIn() {
      * Login
      */
     const handleLogin = () => {
+        setSubmitLoading(1);
+
         const data = {
             username: username,
             password: password
         }
 
-        axios.post('http://localhost:8000/api/person/v1/token/', data)
+        axios.post(process.env.apiHost + '/api/person/v1/token/', data)
         .then((response) => {
             setCookie('ks-user', response.data);
 
@@ -95,6 +98,7 @@ export default function SignIn() {
         .catch((error) => {
             const errorData = error?.response?.data;
             handleError(errorData);
+            setSubmitLoading(0);
         });
     }
 
@@ -122,7 +126,7 @@ export default function SignIn() {
                 }
             }
 
-            axios.post('http://localhost:8000/api/feeder/v1/suggests/', data, config)
+            axios.post(process.env.apiHost + '/api/feeder/v1/suggests/', data, config)
                 .then((response) => {
                     // save suggest data
                     setCookie('suggest-for-' + spread, JSON.stringify(response.data));
@@ -177,11 +181,18 @@ export default function SignIn() {
                                 Anda mengirim saran sebagai Anonim.
                             </div>
 
-                            <button type="submit" className="bg-red-800 text-white px-6 py-2 ml-auto">Kirim</button>
+                            <button type="submit" className="bg-red-800 text-white px-6 py-2 ml-auto" disabled={submitLoading == 1 ? 'disabled' : ''}>
+                                {submitLoading == 1 ? 'Memproses...' : 'Kirim'}
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
+
+            <p className="mx-5 text-center mt-5 text-sm">
+                Tidak bisa masuk? Hubungi kami untuk bantuan. <br />
+                WhatsApp 0811806807
+            </p>
         </>
     )
 }

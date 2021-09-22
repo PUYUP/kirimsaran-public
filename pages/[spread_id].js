@@ -68,6 +68,7 @@ export default function Spread() {
       product: ''
   });
   const [user, setUser] = useState();
+  const [submitLoading, setSubmitLoading] = useState(0);
 
   useEffect(() => {
     if (spread_id) {
@@ -124,14 +125,14 @@ export default function Spread() {
                     message = errorData?.detail;
                 }
             }
+        
+            Swal.fire({
+                title: 'Kesalahan!',
+                text: message,
+                icon: 'error',
+                confirmButtonText: 'Coba Lagi'
+            });
         }
-
-        Swal.fire({
-            title: 'Kesalahan!',
-            text: message,
-            icon: 'error',
-            confirmButtonText: 'Coba Lagi'
-        });
     }
 
   /**
@@ -206,6 +207,8 @@ export default function Spread() {
    * Send data to server
    */
   const createSuggest = (data) => {
+    setSubmitLoading(1);
+
     data = {...data, spread: spread_id}
 
     const config = {}
@@ -216,10 +219,11 @@ export default function Spread() {
         }
     }
 
-    axios.post('http://localhost:8000/api/feeder/v1/suggests/', data, config)
+    axios.post(process.env.apiHost + '/api/feeder/v1/suggests/', data, config)
       .then((response) => {
         // save suggest data
         setCookie('suggest-for-' + spread_id, JSON.stringify(response.data));
+        setSubmitLoading(0);
 
         router.replace({
             pathname: '/success',
@@ -231,11 +235,12 @@ export default function Spread() {
       .catch((error) => {
         const errorData = error?.response?.data;
         handleError(errorData);
+        setSubmitLoading(0);
       });
   }
 
   const getSpread = async () => {
-      await axios.get('http://localhost:8000/api/feeder/v1/spreads/' + spread_id + '/',
+      await axios.get(process.env.apiHost + '/api/feeder/v1/spreads/' + spread_id + '/',
         { 
             withCredentials: true 
         })
@@ -343,11 +348,13 @@ export default function Spread() {
                     }
 
                     <div className="flex w-full items-center">
-                        <div className="text-gray-700 text-xs">
+                        <div className="text-gray-700 text-xs pr-3">
                             Anda memberi saran sebagai Anonim.
                         </div>
 
-                        <button type="submit" className="bg-red-800 text-white px-6 py-2 ml-auto">Kirim</button>
+                        <button type="submit" className="bg-red-800 text-white px-6 py-2 ml-auto" disabled={submitLoading == 1 ? 'disabled' : ''}>
+                            {submitLoading == 1 ? 'Memproses...' : 'Kirim'}
+                        </button>
                     </div>
                 </div>
             </div>

@@ -2,20 +2,102 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useCookies } from 'react-cookie';
 import DataTable from 'react-data-table-component';
+import { format } from 'date-fns';
 
 import Layout from '../components/layout'
 import Navbar from '../components/navbar'
 
 const axios = require('axios');
 
+function Coupon(props) {
+    return (
+        <>
+            <div className="mb-2 w-full">
+                <table className="table-fixed text-sm w-full border border-blue-200 bg-blue-100">
+                    <tbody>
+                        <tr>
+                            <td className="py px-2 pt-1" style={{width: '110px'}}>Kode kupon</td>
+                            <td className="pl-2 font-bold py px-2 pt-1">
+                              {props.data.identifier}
+                              {props.data.is_active && 
+                                <span className="text-green-700 text-xs py-1 ml-2">Aktif</span>
+                              }
+                              {props.data.is_used && 
+                                <span className="text-red-700 text-xs py-1 ml-2">Digunakan</span>
+                              }
+                            </td>
+                        </tr>
+
+                        <Reward data={props.data.reward} />
+                    </tbody>
+                </table>
+            </div>
+        </>
+    )
+}
+
+function Reward(props) {
+    return (
+        <>
+            <tr>
+                <td className="py px-2">Diberikan oleh</td>
+                <td className="pl-2 py px-2">{props.data.provider}</td>
+            </tr>
+            <tr>
+                <td className="py px-2">Label</td>
+                <td className="pl-2 py px-2">{props.data.label}</td>
+            </tr>
+            <tr>
+                <td className="py px-2">Jumlah</td>
+                <td className="pl-2 py px-2">
+                    {props.data.amount} {props.data.unit_slug} ({props.data.unit_label})
+                </td>
+            </tr>
+            <tr>
+                <td colSpan="2" className="pt-2 py px-2">Keterangan</td>
+            </tr>
+            <tr>
+                <td className="py px-2 pt-0" colSpan="2">{props.data.description ? props.data.description : '-'}</td>
+            </tr>
+                
+            <tr>
+                <td colSpan="2" className="pt-2 py px-2">Ketentuan</td>
+            </tr>
+            <tr>
+                <td className="py px-2 pt-0 pb-1" colSpan="2">{props.data.term ? props.data.term : '-'}</td>
+            </tr>
+        </>
+    )
+}
+
+const renderProduct = (val, row) => {
+  let coupons = val.coupons?.map((d) => d.identifier).join(', ');
+
+  return (
+    <>
+      <div className="block">
+        <p className="text-md font-bold">{val.product_label}</p>
+
+        {coupons &&
+          <p>Kupon: <span className="text-red-800">{coupons}</span></p>
+        }
+      </div>
+    </>
+  )};
+
 const columns = [
     {
         name: 'Produk',
-        selector: row => row.product_label,
+        cell: renderProduct
     },
     {
         name: 'Rating',
         selector: row => row.rating,
+        width: '70px'
+    },
+    {
+        name: 'Tanggapan',
+        selector: row => row.count_interaction,
         width: '100px'
     },
 ];
@@ -34,7 +116,7 @@ function Suggests(props) {
   const [nextUrl, setNextUrl] = useState('');
 
   useEffect(() => {
-    loadSuggests('http://localhost:8000/api/feeder/v1/suggests/?permit=public');
+    loadSuggests(process.env.apiHost + '/api/feeder/v1/suggests/?permit=public');
   }, [user]);
 
   /**
@@ -73,7 +155,99 @@ function Suggests(props) {
     setPrevPage(page);
 	};
 
-  const ExpandedComponent = ({ data }) => <div className="pt-3">{data?.description}</div>;
+  /**
+   * Interaction item
+   */
+  const InteractionItem = (props) => {
+    return (
+      <>
+        <li className="pt-2 mt-2 border-t">
+          <p className="font-bold text-sm mb-1">
+            {props?.data?.is_product_owner ? 'Pemilik Usaha' : 'Saya'}
+            <span className="font-normal ml-3 text-gray-600">
+              {format(new Date(props?.data?.create_at), 'dd/MM/yyyy kk:mm')}
+            </span>
+          </p>
+          
+          <p>{props?.data?.description}</p>
+        </li>
+      </>
+    )
+  }
+
+  /**
+   * When expand
+   */
+  const ExpandedComponent = ({ data }) => {
+    const [interactionData, setInteractionData] = useState([]);
+    const [loading, setLoading] = useState(0);
+
+    useEffect(() => {
+      if (data.count_interaction > 0) {
+        loadInteractions(data?.uuid, process.env.apiHost + '/api/feeder/v1/interactions/');
+      }
+    }, [data]);
+
+    /**
+     * Fetch interaction
+     */
+    const loadInteractions = (suggest, url) => {
+      setLoading(1);
+
+      const config = {}
+
+      if (user?.token) {
+        config['headers'] = {
+            'Authorization': 'Bearer ' + user?.token?.access
+        }
+
+        axios.get(url + '?suggest=' + suggest, config)
+          .then((response) => {
+            setInteractionData(response?.data);
+            setLoading(0);
+          })
+          .catch((error) => {
+            // pass
+        });
+      }
+    }
+
+    return (
+      <>
+        <div className="pt-3 pb-3">
+          {data?.description}
+        </div>
+
+        {data?.coupons?.length > 0 && 
+            <>
+                {
+                    data.coupons.map((c, i) => (
+                        <Coupon data={c} key={i} />
+                    ))
+                }
+            </>
+        }
+
+        {(interactionData?.results?.length > 0 && loading == 0) &&
+          <>
+            <h5 className="uppercase text-xs font-bold mt-2">Tanggapan</h5>
+            <ul className="mb-3">
+              {
+                interactionData.results.map((d, i) => (
+                    <InteractionItem data={d} key={i} />
+                ))
+              }
+            </ul>
+          </>
+        }
+
+        {loading == 1 &&
+          <p className="text-sm text-red-600 mb-3">Memuat tanggapan...</p>
+        }
+      </>
+    )
+  };
+
   const paginationComponentOptions = {
     noRowsPerPage: true,
   };

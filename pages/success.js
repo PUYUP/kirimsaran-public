@@ -54,8 +54,7 @@ function Reward(props) {
             </tr>
             <tr>
                 <td className="py px-2 pt-0 pb-1" colSpan="2">{props.data.term ? props.data.term : '-'}</td>
-            </tr>
-                    
+            </tr>  
         </>
     )
 }

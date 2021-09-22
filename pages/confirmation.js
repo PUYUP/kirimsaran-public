@@ -24,6 +24,7 @@ export default function Confirmation() {
         issuer: ''
     });
     const [user, setUser] = useState();
+    const [submitLoading, setSubmitLoading] = useState(0);
 
     useEffect(() => {
         if (issuer) {
@@ -108,7 +109,7 @@ export default function Confirmation() {
             challenge: 'validate_msisdn',
         }
 
-        axios.post('http://localhost:8000/api/person/v1/securecodes/', data)
+        axios.post(process.env.apiHost + '/api/person/v1/securecodes/', data)
         .then((response) => {
             // save session
             localStorage.setItem('confirmation_' + issuer, JSON.stringify(response.data));
@@ -132,19 +133,22 @@ export default function Confirmation() {
      * Validate secure code
      */
     const validateSecureCode = async () => {
+        setSubmitLoading(1);
+
         const d = loadSecureCode();
         const data = {
             challenge: d?.challenge,
             token: d?.token,
         }
 
-        axios.patch('http://localhost:8000/api/person/v1/securecodes/' + passcode + '/', data)
+        axios.patch(process.env.apiHost + '/api/person/v1/securecodes/' + passcode + '/', data)
         .then((response) => {
             createUser();
         })
         .catch((error) => {
             const errorData = error?.response?.data;
             handleError(errorData);
+            setSubmitLoading(0);
         });
     }
 
@@ -177,13 +181,14 @@ export default function Confirmation() {
             }
         }
 
-        axios.post('http://localhost:8000/api/person/v1/users/', data)
+        axios.post(process.env.apiHost + '/api/person/v1/users/', data)
         .then((response) => {
             handleLogin();
         })
         .catch((error) => {
             const errorData = error?.response?.data;
             handleError(errorData);
+            setSubmitLoading(0);
         });
     }
 
@@ -196,7 +201,7 @@ export default function Confirmation() {
             password: password
         }
 
-        axios.post('http://localhost:8000/api/person/v1/token/', data)
+        axios.post(process.env.apiHost + '/api/person/v1/token/', data)
         .then((response) => {
             setCookie('ks-user', response.data);
             setUser(response.data);
@@ -205,6 +210,7 @@ export default function Confirmation() {
         .catch((error) => {
             const errorData = error?.response?.data;
             handleError(errorData);
+            setSubmitLoading(0);
         });
     }
 
@@ -223,7 +229,7 @@ export default function Confirmation() {
                 }
             }
 
-            axios.post('http://localhost:8000/api/feeder/v1/suggests/', data, config)
+            axios.post(process.env.apiHost + '/api/feeder/v1/suggests/', data, config)
                 .then((response) => {
                     // save suggest data
                     setCookie('suggest-for-' + spread, JSON.stringify(response.data));
@@ -241,6 +247,7 @@ export default function Confirmation() {
                 .catch((error) => {
                     const errorData = error?.response?.data;
                     handleError(errorData);
+                    setSubmitLoading(0);
                 });
         }
     }
@@ -313,7 +320,9 @@ export default function Confirmation() {
                                     Anda mengirim saran sebagai Anonim.
                                 </div>
 
-                                <button type="submit" className="bg-red-800 text-white px-6 py-2 ml-auto">Kirim</button>
+                                <button type="submit" className="bg-red-800 text-white px-6 py-2 ml-auto" disabled={submitLoading == 1 ? 'disabled' : ''}>
+                                    {submitLoading == 1 ? 'Memproses...' : 'Kirim'}
+                                </button>
                             </div>
                         </form>
                     </div>
