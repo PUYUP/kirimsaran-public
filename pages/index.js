@@ -31,7 +31,7 @@ export default function Home() {
                   </button>
 
                   <p className="text-sm pt-5">Anda pemilik usaha?</p>
-                  <a href="https://dashboard.kirimsaran.com" target="_blank" className="text-blue-800 text-sm py-2 px-4 inline-block font-bold">Daftar Disini &rarr;</a>
+                  <a href="https://dashboard.kirimsaran.com" target="_blank" rel="noreferrer" className="text-blue-800 text-sm py-2 px-4 inline-block font-bold">Daftar Disini &rarr;</a>
                 </>
               }
 
