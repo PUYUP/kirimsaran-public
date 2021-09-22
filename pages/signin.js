@@ -152,9 +152,14 @@ export default function SignIn() {
         <>
             <div className="shadow overflow-hidden mx-5">
                 <div className="px-4 py-4 bg-white">
+                    <h5 className="font-bold mb-2 text-sm">Kenapa perlu login?</h5>
                     <p className="text-sm border-b pb-2 mb-2">
-                        Klaim hadiah memerlukan konfirmasi nomor ponsel untuk memastikan hadiah diberikan kepada Anda. 
-                        Jangan khawatir, nomor ponsel tidak diberikan kesiapapun.
+                        1. Untuk memastikan hadiah diberikan kepada Anda. 
+                        Nomor ponsel tidak disebarkan pada siapapun.
+                    </p>
+
+                    <p className="text-sm border-b pb-2 mb-2">
+                        2. Untuk melihat riwayat saran yang pernah Anda berikan.
                     </p>
 
                     <form method="POST" onSubmit={handleSubmit}>
