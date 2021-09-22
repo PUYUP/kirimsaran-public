@@ -1,6 +1,7 @@
 module.exports = {
   reactStrictMode: true,
   env: {
-    apiHost: 'https://apiks.cliptask.com',
+    apiHost: 'http://localhost:8000',
+    // apiHost: 'https://apiks.cliptask.com',
   }
 }

@@ -69,6 +69,7 @@ export default function Spread() {
   });
   const [user, setUser] = useState();
   const [submitLoading, setSubmitLoading] = useState(0);
+  const [showIntroduction, setShowIntroduction] = useState(0);
 
   useEffect(() => {
     if (spread_id) {
@@ -269,9 +270,38 @@ export default function Spread() {
         <form onSubmit={handleSubmit} method="POST">
             <div className="shadow overflow-hidden mx-5">
                 <div className="px-4 py-4 bg-white">
-                    <p className="border-b mb-2 pb-2 text-sm">
-                        Saran untuk <strong>{ spreadData.product }</strong>
-                    </p>
+                    <div className="border-b mb-2 pb-2 text-sm">
+                        <div className="flex w-full">
+                            <div>
+                                <span className="pr-2">Saran untuk</span>
+                                <strong>{ spreadData.product }</strong>
+                            </div>
+
+                            {spreadData?.introduction &&
+                                <div className="pl-2 ml-auto">
+                                    {showIntroduction == 0 &&
+                                        <button type="button" className="bg-blue-200 text-xs border border-blue-300 px-2 py-1" onClick={() => setShowIntroduction(1)}>
+                                            Baca Pengantar
+                                        </button>
+                                    }
+
+                                    {showIntroduction == 1 &&
+                                        <button type="button" className="bg-red-200 text-xs border border-red-300 px-2 py-1" onClick={() => setShowIntroduction(0)}>
+                                            Tutup Pengantar
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        {showIntroduction == 1 &&
+                            <>
+                                <div className="bg-blue-100 border border-blue-200 p-3 mt-3">
+                                    {spreadData?.introduction}
+                                </div>
+                            </>
+                        }
+                    </div>
 
                     {(showReward == 0 && spreadData.rewards.length > 0) &&
                         <button type="button" className="bg-green-400 text-white px-6 py-2 w-full mb-2 flex items-center justify-center" onClick={() => setShowReward((1))}>
@@ -282,7 +312,7 @@ export default function Spread() {
                                 </svg>
                             </span>
 
-                            <span className="ml-2">Ada hadiahnya! Lihat</span>
+                            <span className="ml-2 text-sm">Lihat hadiah!</span>
                         </button>
                     }
 
